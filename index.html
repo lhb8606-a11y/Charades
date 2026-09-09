@@ -7,7 +7,7 @@
     <style>
         /* 기본 배경 및 폰트 설정 (어두운 배경) */
         body {
-            background-color: #1a1a1a;
+            background-color: #121212;
             color: #ffffff;
             font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
             margin: 0;
@@ -21,7 +21,7 @@
             -webkit-user-select: none;
         }
 
-        /* 각 화면(Screen) 전환용 클래스 */
+        /* 화면 전환용 클래스 */
         .screen {
             display: none;
             flex-direction: column;
@@ -30,66 +30,116 @@
             width: 100%;
             height: 100%;
             text-align: center;
+            position: relative;
         }
         .active { display: flex; }
 
-        /* 제목 화면 */
+        /* 타이틀 화면 */
         .title {
-            font-size: 5vw;
+            font-size: 6vw;
             font-weight: bold;
-            cursor: pointer;
+            color: #FFD166;
+            text-shadow: 2px 2px 10px rgba(255, 209, 102, 0.5);
             animation: pulse 2s infinite;
         }
-        @media (max-width: 768px) { .title { font-size: 10vw; } }
+        @media (max-width: 768px) { .title { font-size: 12vw; } }
 
         .click-guide {
-            margin-top: 20px;
+            margin-top: 30px;
             font-size: 1.2rem;
-            color: #888;
+            color: #aaa;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
         }
 
+        /* 룰렛 화면 전용 */
+        #selected-category-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            min-height: 3.5rem;
+            margin-bottom: 20px;
+            color: #fff;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.3s;
+        }
+        #selected-category-display.pop {
+            transform: scale(1.3);
+            color: #06D6A0;
+            text-shadow: 0 0 15px rgba(6, 214, 160, 0.8);
+        }
+
+        .roulette-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            margin: 20px 0;
+            border-radius: 50%;
+            border: 6px solid #333;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; 
+            height: 0; 
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 35px solid #EF476F;
+            z-index: 10;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6));
+        }
+
+        .wheel-segment-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+            white-space: nowrap;
+        }
+
+        /* 게임 화면 */
+        .game-image { max-width: 300px; max-height: 300px; margin-bottom: 30px; object-fit: contain; }
+        .game-emoji { font-size: 150px; margin-bottom: 20px; line-height: 1; }
+        .game-word { 
+            font-size: 3.5rem; 
+            font-weight: bold; 
+            word-break: keep-all; 
+            padding: 0 30px;
+            line-height: 1.3;
+            max-width: 90%;
+        }
+        .game-counter { position: absolute; top: 30px; right: 30px; font-size: 1.5rem; color: #aaa; font-weight: bold; }
+        
+        .instruction { position: absolute; bottom: 50px; font-size: 1rem; color: #666; }
+        
         /* 저작권 문구 */
         .copyright {
             position: absolute;
-            bottom: 20px;
-            font-size: 12px;
+            bottom: 15px;
+            font-size: 11px;
             color: #ffffff;
-            opacity: 0.7;
+            opacity: 0.5;
+            letter-spacing: 1px;
         }
-
-        /* 장르 선택 화면 */
-        .category-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            max-width: 800px;
-        }
-        .btn-category {
-            background-color: #333;
-            color: white;
-            border: 2px solid #555;
-            padding: 20px 40px;
-            font-size: 1.5rem;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.2s;
-            width: 250px;
-        }
-        .btn-category:hover { background-color: #505050; border-color: #777; transform: scale(1.05); }
-
-        /* 게임 화면 */
-        #game-screen { cursor: pointer; }
-        .game-image { max-width: 300px; max-height: 300px; margin-bottom: 30px; object-fit: contain; }
-        .game-emoji { font-size: 150px; margin-bottom: 20px; line-height: 1; }
-        .game-word { font-size: 4rem; font-weight: bold; word-break: keep-all; padding: 0 20px; }
-        .game-counter { position: absolute; top: 20px; right: 30px; font-size: 1.5rem; color: #aaa; }
-        
-        .instruction { position: absolute; bottom: 50px; font-size: 1rem; color: #666; }
 
         @keyframes pulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            50% { transform: scale(1.03); }
             100% { transform: scale(1); }
         }
     </style>
@@ -97,21 +147,22 @@
 <body>
 
     <!-- 1. 타이틀 화면 -->
-    <div id="title-screen" class="screen active" onclick="showScreen('category-screen')">
+    <div id="title-screen" class="screen active">
         <div class="title">몸으로 말해요</div>
         <div class="click-guide">화면을 클릭(터치)하거나 스페이스바를 누르세요</div>
         <div class="copyright">저작권은 Builder sound 에 있습니다</div>
     </div>
 
-    <!-- 2. 장르 선택 화면 -->
-    <div id="category-screen" class="screen">
-        <h2 style="font-size: 2.5rem; margin-bottom: 40px;">장르를 선택하세요</h2>
-        <div class="category-container">
-            <button class="btn-category" onclick="startGame('pokemon')">포켓몬스터 1세대</button>
-            <button class="btn-category" onclick="startGame('mart')">마트 물건</button>
-            <button class="btn-category" onclick="startGame('animal')">동물</button>
-            <button class="btn-category" onclick="startGame('proverb')">속담</button>
+    <!-- 2. 룰렛 장르 선택 화면 -->
+    <div id="roulette-screen" class="screen">
+        <div id="selected-category-display">장르를 선택하세요</div>
+        <div class="roulette-container">
+            <div class="pointer"></div>
+            <div class="wheel" id="wheel">
+                <!-- 자바스크립트로 7개 장르가 생성됩니다 -->
+            </div>
         </div>
+        <div class="click-guide" id="roulette-guide">클릭(스페이스)하여 룰렛 돌리기</div>
         <div class="copyright">저작권은 Builder sound 에 있습니다</div>
     </div>
 
@@ -119,37 +170,38 @@
     <div id="game-screen" class="screen">
         <div class="game-counter" id="game-counter">1 / 10</div>
         
-        <!-- 이미지가 들어갈 공간 -->
         <img id="item-image" class="game-image" src="" alt="게임 이미지" style="display: none;">
         <div id="item-emoji" class="game-emoji" style="display: none;"></div>
-        
-        <!-- 제시어 -->
         <div class="game-word" id="item-word">제시어</div>
         
-        <div class="instruction">화면 클릭 / 터치 / 스페이스바를 누르면 다음으로 넘어갑니다.</div>
+        <div class="instruction">클릭 / 터치 / 스페이스바 : 다음 문제</div>
     </div>
 
     <!-- 4. 종료 화면 -->
-    <div id="end-screen" class="screen" onclick="showScreen('category-screen')">
+    <div id="end-screen" class="screen">
         <div class="title" style="animation: none;">게임 끝!</div>
-        <div class="click-guide">클릭하여 장르 선택으로 돌아가기</div>
+        <div class="click-guide">클릭하여 메인으로 돌아가기</div>
+        <div class="copyright">저작권은 Builder sound 에 있습니다</div>
     </div>
 
 <script>
     // -----------------------------------------------------
-    // 1. 데이터 베이스 준비 (포켓몬 151, 마트 100, 동물 100, 속담 100)
+    // 1. 데이터베이스 및 장르 설정
     // -----------------------------------------------------
 
+    const categories = [
+        { id: 'pokemon', name: '포켓몬 1세대' },
+        { id: 'mart', name: '마트 물건' },
+        { id: 'animal', name: '동물' },
+        { id: 'proverb', name: '속담' },
+        { id: 'job', name: '직업 (심화)' },
+        { id: 'sport', name: '스포츠 (심화)' },
+        { id: 'emotion', name: '감정 / 상태' }
+    ];
+
+    // 기존 데이터 (포켓몬, 마트, 동물, 속담)
     const pokemonNames = ["이상해씨", "이상해풀", "이상해꽃", "파이리", "리자드", "리자몽", "꼬부기", "어니부기", "거북왕", "캐터피", "단데기", "버터플", "뿔충이", "딱충이", "독침붕", "구구", "피죤", "피죤투", "꼬렛", "레트라", "깨비참", "깨비드릴조", "아보", "아보크", "피카츄", "라이츄", "모래두지", "고지", "니드런♀", "니드리나", "니드퀸", "니드런♂", "니드리노", "니드킹", "삐삐", "픽시", "식스테일", "나인테일", "푸린", "푸크린", "주뱃", "골뱃", "뚜벅쵸", "냄새꼬", "라플레시아", "파라스", "파라섹트", "콘팡", "도나리", "디그다", "닥트리오", "나옹", "페르시안", "고라파덕", "골덕", "망키", "성원숭", "가디", "윈디", "발챙이", "슈륙챙이", "강챙이", "캐이시", "윤겔라", "후딘", "알통몬", "근육몬", "괴력몬", "모다피", "우츠동", "우츠보트", "왕눈해", "독파리", "꼬마돌", "데구리", "딱구리", "포니타", "날쌩마", "야돈", "야도란", "코일", "레어코일", "파오리", "두두", "두트리오", "쥬쥬", "쥬레곤", "질퍽이", "질뻐기", "셀러", "파르셀", "고오스", "고우스트", "팬텀", "롱스톤", "슬리프", "슬리퍼", "크랩", "킹크랩", "찌리리공", "붐볼", "아라리", "나시", "탕구리", "텅구리", "시라소몬", "홍수몬", "내루미", "또가스", "또도가스", "뿔카노", "코뿌리", "럭키", "덩쿠리", "캥카", "쏘드라", "시드라", "콘치", "왕콘치", "별가사리", "아쿠스타", "마임맨", "스라크", "루주라", "에레브", "마그마", "쁘사이저", "켄타로스", "잉어킹", "갸라도스", "라프라스", "메타몽", "이브이", "샤미드", "쥬피썬더", "부스터", "폴리곤", "암나이트", "암스타", "투구", "투구푸스", "프테라", "잠만보", "프리져", "썬더", "파이어", "미뇽", "신뇽", "망나뇽", "뮤츠", "뮤"];
-    
-    // 포켓몬 1~151번 맵핑 생성 (공식 PokeAPI 일러스트 활용)
-    const dbPokemon = pokemonNames.map((name, index) => {
-        return { 
-            word: name, 
-            type: 'image', 
-            src: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${index + 1}.png`
-        };
-    });
+    const dbPokemon = pokemonNames.map((name, index) => ({ word: name, type: 'image', src: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${index + 1}.png` }));
 
     const dbMartRaw = "사과🍎,바나나🍌,포도🍇,수박🍉,딸기🍓,메론🍈,체리🍒,복숭아🍑,파인애플🍍,망고🥭,토마토🍅,가지🍆,감자🥔,당근🥕,옥수수🌽,고추🌶️,오이🥒,상추🥬,브로콜리🥦,마늘🧄,양파🧅,버섯🍄,땅콩🥜,밤🌰,빵🍞,크루아상🥐,바게트🥖,프레첼🥨,베이글🥯,팬케이크🥞,와플🧇,치즈🧀,고기🥩,닭고기🍗,베이컨🥓,햄버거🍔,감자튀김🍟,피자🍕,핫도그🌭,샌드위치🥪,타코🌮,부리토🌯,계란🥚,계란후라이🍳,오징어🦑,새우🍤,초밥🍣,도시락🍱,만두🥟,라면🍜,스파게티🍝,고구마🍠,어묵🍢,초콜릿🍫,사탕🍬,막대사탕🍭,젤리🍮,꿀🍯,우유🥛,커피☕,차🍵,주스🧃,맥주🍺,와인🍷,생수💧,아이스크림🍦,빙수🍧,케이크🍰,쿠키🍪,도넛🍩,팝콘🍿,소금🧂,버터🧈,통조림🥫,화장지🧻,비누🧼,스펀지🧽,치약🦷,칫솔🪥,샴푸🧴,가위✂️,테이프🩹,건전지🔋,전구💡,노트북💻,휴대폰📱,시계⌚,우산☂️,장갑🧤,양말🧦,모자🧢,신발👟,가방🎒,안경👓,마스크😷,밴드🩹,물티슈🧻,기저귀👶";
     const dbMart = dbMartRaw.split(',').map(item => ({ word: item.slice(0, -2).trim() || item.slice(0, -1), type: 'emoji', emoji: item.slice(-2).match(/[\p{Emoji}]/u) ? item.slice(-2) : item.slice(-1) }));
@@ -160,22 +212,164 @@
     const dbProverbRaw = "가는 날이 장날이다,가는 말이 고와야 오는 말이 곱다,가랑비에 옷 젖는 줄 모른다,가재는 게 편이다,가지 많은 나무에 바람 잘 날 없다,간에 붙었다 쓸개에 붙었다 한다,갈수록 태산이다,개구리 올챙이 적 생각 못 한다,개천에서 용 난다,고래 싸움에 새우 등 터진다,고양이 목에 방울 달기,공든 탑이 무너지랴,구슬이 서 말이라도 꿰어야 보배다,귀에 걸면 귀걸이 코에 걸면 코걸이,그림의 떡,긁어 부스럼,금강산도 식후경,기는 놈 위에 나는 놈 있다,까마귀 날자 배 떨어진다,꿩 대신 닭,남의 잔치에 감 놔라 배 놔라 한다,낫 놓고 기역 자도 모른다,낮말은 새가 듣고 밤말은 쥐가 듣는다,내 코가 석 자,누워서 침 뱉기,다 된 죽에 코 빠뜨리기,달면 삼키고 쓰면 뱉는다,닭 쫓던 개 지붕 쳐다보듯,도둑이 제 발 저린다,돌다리도 두들겨 보고 건너라,동문서답,되로 주고 말로 받는다,등잔 밑이 어둡다,땅 짚고 헤엄치기,똥 묻은 개가 겨 묻은 개 나무란다,뛰는 놈 위에 나는 놈 있다,마른 하늘에 날벼락,말 한마디에 천 냥 빚도 갚는다,매도 먼저 맞는 게 낫다,모난 돌이 정 맞는다,모르면 약이요 아는 게 병이다,믿는 도끼에 발등 찍힌다,밑 빠진 독에 물 붓기,바늘 도둑이 소 도둑 된다,발 없는 말이 천 리 간다,방귀 뀐 놈이 성낸다,배보다 배꼽이 더 크다,백지장도 맞들면 낫다,벼는 익을수록 고개를 숙인다,병 주고 약 준다,보기 좋은 떡이 먹기도 좋다,사공이 많으면 배가 산으로 간다,서당 개 삼 년이면 풍월을 읊는다,세 살 버릇 여든까지 간다,소 잃고 외양간 고친다,쇠뿔도 단김에 빼라,수박 겉 핥기,시작이 반이다,십 년이면 강산도 변한다,아는 길도 물어가라,아니 땐 굴뚝에 연기 날까,얌전한 고양이 부뚜막에 먼저 올라간다,어물전 망신은 꼴뚜기가 시킨다,열 번 찍어 안 넘어가는 나무 없다,오르지 못할 나무는 쳐다보지도 마라,옥에도 티가 있다,우물 안 개구리,원숭이도 나무에서 떨어진다,윗물이 맑아야 아랫물이 맑다,입에 쓴 약이 병에는 좋다,자라 보고 놀란 가슴 솥뚜껑 보고 놀란다,작은 고추가 맵다,종로에서 뺨 맞고 한강에서 눈 흘긴다,쥐구멍에도 볕 뜰 날 있다,지렁이도 밟으면 꿈틀한다,천 리 길도 한 걸음부터,칼로 물 베기,콩 심은 데 콩 나고 팥 심은 데 팥 난다,티끌 모아 태산,팥으로 메주를 쑨대도 곧이듣는다,핑계 없는 무덤 없다,하늘의 별 따기,하늘이 무너져도 솟아날 구멍이 있다,하룻강아지 범 무서운 줄 모른다,한 귀로 듣고 한 귀로 흘린다,호랑이도 제 말 하면 온다,호랑이에 물려 가도 정신만 차리면 산다,무소식이 희소식이다,떡 줄 사람은 생각도 안 하는데 김칫국부터 마신다,사촌이 땅을 사면 배가 아프다,쥐도 새도 모르게,찬물도 위아래가 있다,참을 인 자 셋이면 살인을 면한다,첫술에 배부르랴,고생 끝에 낙이 온다,꼬리가 길면 밟힌다,빈 수레가 요란하다,소문난 잔치에 먹을 것 없다,우물을 파도 한 우물을 파라,우는 아이 젖 준다";
     const dbProverb = dbProverbRaw.split(',').map(item => ({ word: item, type: 'text' }));
 
+    // 신규 추가 데이터 3종 (직업, 스포츠, 감정/상태) - 50개씩
+    const dbJobRaw = "법의학 부검의,웨딩 플래너,심해 잠수사,대학교수,고3 수능 출제위원,동물원 사육사,홈쇼핑 쇼호스트,오케스트라 지휘자,특수분장사,유튜버 (크리에이터),프로게이머,국회의원,스턴트맨,피자 도우 돌리기 장인,자동차 정비공,바리스타,항공기 객실 승무원,우주비행사,교도관,텔레마케터,마술사,프로파일러,기상캐스터,법정 통역사,문화재 복원 전문가,발레 극단 무용수,타워크레인 기사,응급실 의사,신약 개발 연구원,펀드매니저,헤드헌터,미술관 도슨트(안내인),조향사,웹툰 작가,택배 상하차 알바,야구 심판,경매사,방역업체 직원,외과의사,네일 아티스트,타투이스트,장의사,VIP 보디가드,화이트해커,카지노 딜러,유치원 원장,헬기 조종사,수어 통역사,영화감독,프로 바둑기사";
+    const dbJob = dbJobRaw.split(',').map(item => ({ word: item, type: 'text' }));
+
+    const dbSportRaw = "컬링,리듬체조,싱크로나이즈드 스위밍,봅슬레이,스켈레톤,루지,투포환,장대높이뛰기,역도,펜싱,카바디,세팍타크로,철인 3종 경기,크로스컨트리 스키,스키점프,아이스하키,피겨 스케이팅,조정(로잉),수구,트램펄린,스포츠 클라이밍,비치발리볼,주짓수,카포에이라,합기도,무에타이,킥복싱,파쿠르,서핑,웨이크보드,스쿠버 다이빙,패러글라이딩,스카이다이빙,승마,마장마술,경륜,요트 경기,체스,e스포츠,다트,당구(3쿠션),스누커,게이트볼,피구,줄다리기,씨름,스모,검도,유도,크로스핏";
+    const dbSport = dbSportRaw.split(',').map(item => ({ word: item, type: 'text' }));
+
+    const dbEmotionRaw = "추워서 오들오들 떨며 핫팩 비비는 상태,엄청 매운 음식 먹고 땀 흘리는 상태,화장실이 급해서 발동동 구르는 상태,몰래 방귀 뀌고 모른 척하는 상태,로또 1등 번호 확인하고 기절할 뻔한 상태,길 가다 전여친/전남친 마주쳐 당황한 상태,면접에서 대답 못해 뇌 정지 온 상태,치과에서 신경치료 받으며 겁먹은 상태,발표 중 바지 지퍼 열린 걸 깨달은 상태,짝사랑과 눈 마주쳐서 부끄러운 상태,몰래 야식 먹다 엄마한테 걸린 상태,버스 문 닫히는데 뛰어와 겨우 탄 상태,길 가다 새똥 맞은 상태,핸드폰 변기에 빠뜨린 상태,10년 만에 억울한 누명 벗은 상태,혼자 공포영화 보다 뒤에서 소리 나 놀란 상태,뜨거운 커피 마시다 혀 덴 상태,모기 잡으려다 내 뺨 때린 상태,이어폰 안 꽂고 유튜브 크게 튼 상태,다이어트 중 치킨 냄새 맡은 상태,발가락 모서리에 찧고 소리 못 내는 상태,탕수육 소스 부어졌을 때 찍먹파의 분노,소개팅에서 상대방이 너무 마음에 안 드는 상태,노래방에서 음 이탈 난 상태,수업 중 졸다가 고개 꺾여 깬 상태,겨울에 정전기 올라 깜짝 놀란 상태,앞사람이 문 안 잡아줘서 코 부딪힌 상태,주식 하한가 맞고 영혼 나간 상태,새로 산 흰 옷에 짬뽕 국물 튄 상태,길에서 아는 사람인 줄 알고 인사했는데 모를 때,사진 찍힐 때 억지로 웃는 상태,양치하는데 치약이 옷에 떨어진 상태,택배 뜯을 때의 설렘,이어폰 줄 꼬인 거 푸는 상태,안경 낀 채로 세수하려는 상태,껌 밟고 떼어내는 상태,엘리베이터 닫힘 버튼 연타하는 상태,공중화장실 휴지 없는 걸 알게 된 상태,뷔페에서 5접시 먹고 배부른 상태,앞머리 혼자 자르다 망친 상태,지각해서 몰래 뒷문으로 들어가는 상태,밤에 화장실 가다 무서워서 뛰는 상태,샤워하다 찬물 나와 소리 지르는 상태,새 신발 신고 뒤꿈치 까진 상태,폰 떨어뜨렸는데 액정 무사한지 확인하는 상태,무거운 짐 들고 계단 오르다 힘 빠진 상태,게임 지고 키보드 샷건 치는 상태,코 파다 피 난 상태,콧털 뽑다 눈물 찔끔 난 상태,하품하다 턱 빠진 상태";
+    const dbEmotion = dbEmotionRaw.split(',').map(item => ({ word: item, type: 'text' }));
+
 
     // -----------------------------------------------------
-    // 2. 게임 로직
+    // 2. 룰렛 시각화(UI) 구성
     // -----------------------------------------------------
+    const wheel = document.getElementById('wheel');
+    const segments = categories.length; // 7개
+    const degPerSeg = 360 / segments;
+    const bgColors = ['#EF476F', '#FFD166', '#06D6A0', '#118AB2', '#073B4C', '#9D4EDD', '#F77F00'];
+    
+    let bgGradient = 'conic-gradient(';
+    categories.forEach((cat, i) => {
+        bgGradient += `${bgColors[i]} ${i*degPerSeg}deg ${(i+1)*degPerSeg}deg${i<segments-1?', ':')'}`;
+        
+        // 피자 조각 텍스트 배치
+        const text = document.createElement('div');
+        text.className = 'wheel-segment-text';
+        text.innerText = cat.name;
+        // 각도를 정확히 조각 가운데로 맞추고 위쪽(가장자리)으로 이동시킴
+        text.style.transform = `translate(-50%, -50%) rotate(${i * degPerSeg + degPerSeg/2}deg) translateY(-110px)`;
+        wheel.appendChild(text);
+    });
+    wheel.style.background = bgGradient;
+
+
+    // -----------------------------------------------------
+    // 3. 게임 상태 및 진행 로직
+    // -----------------------------------------------------
+    let appState = 'TITLE'; // TITLE, ROULETTE_IDLE, ROULETTE_SPINNING, ROULETTE_STOPPING, ROULETTE_STOPPED, GAME, END
+    let currentAngle = 0;
+    let rouletteRaf = null;
+    let selectedGameCategory = '';
+    
     let currentSequence = [];
     let currentIndex = 0;
-    let currentScreenId = 'title-screen';
 
-    // 화면 전환 함수
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
         document.getElementById(screenId).classList.add('active');
-        currentScreenId = screenId;
     }
 
-    // 배열을 랜덤으로 섞어주는 함수
+    // 전역 컨트롤 (스페이스바, 마우스 클릭, 화면 터치 통합)
+    window.addEventListener('pointerdown', handleGlobalInput);
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            e.preventDefault();
+            handleGlobalInput();
+        }
+    });
+
+    function handleGlobalInput() {
+        switch(appState) {
+            case 'TITLE':
+                showScreen('roulette-screen');
+                initRoulette();
+                break;
+            case 'ROULETTE_IDLE':
+                startRouletteSpin();
+                break;
+            case 'ROULETTE_SPINNING':
+                stopRoulette();
+                break;
+            case 'ROULETTE_STOPPING':
+                // 돌고 멈추는 애니메이션 중에는 입력 방지
+                break;
+            case 'ROULETTE_STOPPED':
+                startActualGame();
+                break;
+            case 'GAME':
+                nextGameItem();
+                break;
+            case 'END':
+                showScreen('roulette-screen');
+                initRoulette();
+                break;
+        }
+    }
+
+    // 룰렛 초기화 및 천천히 돌기
+    function initRoulette() {
+        appState = 'ROULETTE_IDLE';
+        
+        const display = document.getElementById('selected-category-display');
+        display.innerText = "장르를 선택하세요";
+        display.classList.remove('pop');
+        
+        document.getElementById('roulette-guide').innerText = "클릭하여 룰렛을 강하게 돌리세요!";
+        
+        wheel.style.transition = 'none';
+        cancelAnimationFrame(rouletteRaf);
+        
+        function idleSpin() {
+            if(appState === 'ROULETTE_IDLE') {
+                currentAngle = (currentAngle + 0.5) % 360;
+                wheel.style.transform = `rotate(${currentAngle}deg)`;
+                rouletteRaf = requestAnimationFrame(idleSpin);
+            }
+        }
+        idleSpin();
+    }
+
+    // 룰렛 빠르게 돌기
+    function startRouletteSpin() {
+        appState = 'ROULETTE_SPINNING';
+        document.getElementById('roulette-guide').innerText = "클릭하여 룰렛을 멈추세요!";
+        cancelAnimationFrame(rouletteRaf);
+        
+        function fastSpin() {
+            if(appState === 'ROULETTE_SPINNING') {
+                currentAngle = (currentAngle + 18) % 360;
+                wheel.style.transform = `rotate(${currentAngle}deg)`;
+                rouletteRaf = requestAnimationFrame(fastSpin);
+            }
+        }
+        fastSpin();
+    }
+
+    // 룰렛 멈추기 (결과 지정)
+    function stopRoulette() {
+        appState = 'ROULETTE_STOPPING';
+        document.getElementById('roulette-guide').innerText = "결과 확인 중...";
+        cancelAnimationFrame(rouletteRaf);
+        
+        const targetIndex = Math.floor(Math.random() * segments);
+        const targetCenterAngle = targetIndex * degPerSeg + degPerSeg / 2;
+        
+        // 선택된 조각의 중심이 맨 위(0도)로 오게 하기 위한 회전량 계산
+        let targetRotation = 360 - targetCenterAngle;
+        let extraSpins = 360 * 4; // 추가로 4바퀴 더 돔
+        let finalAngle = currentAngle + (360 - (currentAngle % 360)) + targetRotation + extraSpins;
+        
+        wheel.style.transition = 'transform 3.5s cubic-bezier(0.15, 0.85, 0.2, 1)';
+        wheel.style.transform = `rotate(${finalAngle}deg)`;
+        
+        // 3.5초 후 멈춤 완료 처리
+        setTimeout(() => {
+            currentAngle = finalAngle % 360;
+            appState = 'ROULETTE_STOPPED';
+            selectedGameCategory = categories[targetIndex].id;
+            
+            const display = document.getElementById('selected-category-display');
+            display.innerText = categories[targetIndex].name;
+            display.classList.add('pop');
+            
+            document.getElementById('roulette-guide').innerText = "화면을 클릭하면 게임이 시작됩니다!";
+        }, 3500);
+    }
+
+    // 랜덤 셔플 함수
     function shuffle(array) {
         let currentIndex = array.length, randomIndex;
         while (currentIndex != 0) {
@@ -186,15 +380,18 @@
         return array;
     }
 
-    // 게임 시작 함수
-    function startGame(category) {
+    // 실제 게임 시작 (데이터 로딩)
+    function startActualGame() {
+        appState = 'GAME';
         let db = [];
-        if(category === 'pokemon') db = dbPokemon;
-        if(category === 'mart') db = dbMart;
-        if(category === 'animal') db = dbAnimal;
-        if(category === 'proverb') db = dbProverb;
+        if(selectedGameCategory === 'pokemon') db = dbPokemon;
+        if(selectedGameCategory === 'mart') db = dbMart;
+        if(selectedGameCategory === 'animal') db = dbAnimal;
+        if(selectedGameCategory === 'proverb') db = dbProverb;
+        if(selectedGameCategory === 'job') db = dbJob;
+        if(selectedGameCategory === 'sport') db = dbSport;
+        if(selectedGameCategory === 'emotion') db = dbEmotion;
 
-        // 랜덤으로 섞은 뒤 10개 추출
         currentSequence = shuffle([...db]).slice(0, 10);
         currentIndex = 0;
         
@@ -210,11 +407,9 @@
         const counter = document.getElementById('game-counter');
 
         counter.innerText = `${currentIndex + 1} / 10`;
-
         const currentItem = currentSequence[currentIndex];
         itemWord.innerText = currentItem.word;
 
-        // 표시 타입(이미지, 이모지, 텍스트(속담))에 따른 처리
         if (currentItem.type === 'image') {
             itemImage.src = currentItem.src;
             itemImage.style.display = 'block';
@@ -224,51 +419,22 @@
             itemEmoji.style.display = 'block';
             itemImage.style.display = 'none';
         } else {
+            // text 타입 (속담, 직업, 스포츠, 감정 등)
             itemImage.style.display = 'none';
             itemEmoji.style.display = 'none';
         }
     }
 
-    // 다음 문제로 넘어가기
-    function nextItem() {
-        if (currentScreenId !== 'game-screen') return;
-
+    // 다음 문제로
+    function nextGameItem() {
         currentIndex++;
         if (currentIndex >= 10) {
+            appState = 'END';
             showScreen('end-screen');
         } else {
             updateGameView();
         }
     }
-
-    // -----------------------------------------------------
-    // 3. 조작(컨트롤) 이벤트 등록
-    // -----------------------------------------------------
-    
-    // 클릭 및 터치 이벤트
-    document.getElementById('game-screen').addEventListener('click', nextItem);
-    
-    // 모바일 터치 민감도를 위해 touchstart 추가
-    document.getElementById('game-screen').addEventListener('touchstart', (e) => {
-        e.preventDefault(); // 더블 클릭 방지
-        nextItem();
-    }, {passive: false});
-
-    // 스페이스바 조작
-    window.addEventListener('keydown', (e) => {
-        if (e.code === 'Space') {
-            e.preventDefault(); // 스페이스바로 화면 내려가는 것 방지
-            
-            // 타이틀이나 종료 화면일 때 스페이스 누르면 장르 선택화면으로
-            if (currentScreenId === 'title-screen' || currentScreenId === 'end-screen') {
-                showScreen('category-screen');
-            } 
-            // 게임 중이면 다음으로 넘어가기
-            else if (currentScreenId === 'game-screen') {
-                nextItem();
-            }
-        }
-    });
 
 </script>
 </body>
