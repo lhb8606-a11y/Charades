@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>몸으로 말해요</title>
+    <style>
+        /* 기본 배경 및 폰트 설정 (어두운 배경) */
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* 각 화면(Screen) 전환용 클래스 */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+        }
+        .active { display: flex; }
+
+        /* 제목 화면 */
+        .title {
+            font-size: 5vw;
+            font-weight: bold;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+        @media (max-width: 768px) { .title { font-size: 10vw; } }
+
+        .click-guide {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: #888;
+        }
+
+        /* 저작권 문구 */
+        .copyright {
+            position: absolute;
+            bottom: 20px;
+            font-size: 12px;
+            color: #ffffff;
+            opacity: 0.7;
+        }
+
+        /* 장르 선택 화면 */
+        .category-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            max-width: 800px;
+        }
+        .btn-category {
+            background-color: #333;
+            color: white;
+            border: 2px solid #555;
+            padding: 20px 40px;
+            font-size: 1.5rem;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 250px;
+        }
+        .btn-category:hover { background-color: #505050; border-color: #777; transform: scale(1.05); }
+
+        /* 게임 화면 */
+        #game-screen { cursor: pointer; }
+        .game-image { max-width: 300px; max-height: 300px; margin-bottom: 30px; object-fit: contain; }
+        .game-emoji { font-size: 150px; margin-bottom: 20px; line-height: 1; }
+        .game-word { font-size: 4rem; font-weight: bold; word-break: keep-all; padding: 0 20px; }
+        .game-counter { position: absolute; top: 20px; right: 30px; font-size: 1.5rem; color: #aaa; }
+        
+        .instruction { position: absolute; bottom: 50px; font-size: 1rem; color: #666; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. 타이틀 화면 -->
+    <div id="title-screen" class="screen active" onclick="showScreen('category-screen')">
+        <div class="title">몸으로 말해요</div>
+        <div class="click-guide">화면을 클릭(터치)하거나 스페이스바를 누르세요</div>
+        <div class="copyright">저작권은 Builder sound 에 있습니다</div>
+    </div>
+
+    <!-- 2. 장르 선택 화면 -->
+    <div id="category-screen" class="screen">
+        <h2 style="font-size: 2.5rem; margin-bottom: 40px;">장르를 선택하세요</h2>
+        <div class="category-container">
+            <button class="btn-category" onclick="startGame('pokemon')">포켓몬스터 1세대</button>
+            <button class="btn-category" onclick="startGame('mart')">마트 물건</button>
+            <button class="btn-category" onclick="startGame('animal')">동물</button>
+            <button class="btn-category" onclick="startGame('proverb')">속담</button>
+        </div>
+        <div class="copyright">저작권은 Builder sound 에 있습니다</div>
+    </div>
+
+    <!-- 3. 게임 화면 -->
+    <div id="game-screen" class="screen">
+        <div class="game-counter" id="game-counter">1 / 10</div>
+        
+        <!-- 이미지가 들어갈 공간 -->
+        <img id="item-image" class="game-image" src="" alt="게임 이미지" style="display: none;">
+        <div id="item-emoji" class="game-emoji" style="display: none;"></div>
+        
+        <!-- 제시어 -->
+        <div class="game-word" id="item-word">제시어</div>
+        
+        <div class="instruction">화면 클릭 / 터치 / 스페이스바를 누르면 다음으로 넘어갑니다.</div>
+    </div>
+
+    <!-- 4. 종료 화면 -->
+    <div id="end-screen" class="screen" onclick="showScreen('category-screen')">
+        <div class="title" style="animation: none;">게임 끝!</div>
+        <div class="click-guide">클릭하여 장르 선택으로 돌아가기</div>
+    </div>
+
+<script>
+    // -----------------------------------------------------
+    // 1. 데이터 베이스 준비 (포켓몬 151, 마트 100, 동물 100, 속담 100)
+    // -----------------------------------------------------
+
+    const pokemonNames = ["이상해씨", "이상해풀", "이상해꽃", "파이리", "리자드", "리자몽", "꼬부기", "어니부기", "거북왕", "캐터피", "단데기", "버터플", "뿔충이", "딱충이", "독침붕", "구구", "피죤", "피죤투", "꼬렛", "레트라", "깨비참", "깨비드릴조", "아보", "아보크", "피카츄", "라이츄", "모래두지", "고지", "니드런♀", "니드리나", "니드퀸", "니드런♂", "니드리노", "니드킹", "삐삐", "픽시", "식스테일", "나인테일", "푸린", "푸크린", "주뱃", "골뱃", "뚜벅쵸", "냄새꼬", "라플레시아", "파라스", "파라섹트", "콘팡", "도나리", "디그다", "닥트리오", "나옹", "페르시안", "고라파덕", "골덕", "망키", "성원숭", "가디", "윈디", "발챙이", "슈륙챙이", "강챙이", "캐이시", "윤겔라", "후딘", "알통몬", "근육몬", "괴력몬", "모다피", "우츠동", "우츠보트", "왕눈해", "독파리", "꼬마돌", "데구리", "딱구리", "포니타", "날쌩마", "야돈", "야도란", "코일", "레어코일", "파오리", "두두", "두트리오", "쥬쥬", "쥬레곤", "질퍽이", "질뻐기", "셀러", "파르셀", "고오스", "고우스트", "팬텀", "롱스톤", "슬리프", "슬리퍼", "크랩", "킹크랩", "찌리리공", "붐볼", "아라리", "나시", "탕구리", "텅구리", "시라소몬", "홍수몬", "내루미", "또가스", "또도가스", "뿔카노", "코뿌리", "럭키", "덩쿠리", "캥카", "쏘드라", "시드라", "콘치", "왕콘치", "별가사리", "아쿠스타", "마임맨", "스라크", "루주라", "에레브", "마그마", "쁘사이저", "켄타로스", "잉어킹", "갸라도스", "라프라스", "메타몽", "이브이", "샤미드", "쥬피썬더", "부스터", "폴리곤", "암나이트", "암스타", "투구", "투구푸스", "프테라", "잠만보", "프리져", "썬더", "파이어", "미뇽", "신뇽", "망나뇽", "뮤츠", "뮤"];
+    
+    // 포켓몬 1~151번 맵핑 생성 (공식 PokeAPI 일러스트 활용)
+    const dbPokemon = pokemonNames.map((name, index) => {
+        return { 
+            word: name, 
+            type: 'image', 
+            src: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${index + 1}.png`
+        };
+    });
+
+    const dbMartRaw = "사과🍎,바나나🍌,포도🍇,수박🍉,딸기🍓,메론🍈,체리🍒,복숭아🍑,파인애플🍍,망고🥭,토마토🍅,가지🍆,감자🥔,당근🥕,옥수수🌽,고추🌶️,오이🥒,상추🥬,브로콜리🥦,마늘🧄,양파🧅,버섯🍄,땅콩🥜,밤🌰,빵🍞,크루아상🥐,바게트🥖,프레첼🥨,베이글🥯,팬케이크🥞,와플🧇,치즈🧀,고기🥩,닭고기🍗,베이컨🥓,햄버거🍔,감자튀김🍟,피자🍕,핫도그🌭,샌드위치🥪,타코🌮,부리토🌯,계란🥚,계란후라이🍳,오징어🦑,새우🍤,초밥🍣,도시락🍱,만두🥟,라면🍜,스파게티🍝,고구마🍠,어묵🍢,초콜릿🍫,사탕🍬,막대사탕🍭,젤리🍮,꿀🍯,우유🥛,커피☕,차🍵,주스🧃,맥주🍺,와인🍷,생수💧,아이스크림🍦,빙수🍧,케이크🍰,쿠키🍪,도넛🍩,팝콘🍿,소금🧂,버터🧈,통조림🥫,화장지🧻,비누🧼,스펀지🧽,치약🦷,칫솔🪥,샴푸🧴,가위✂️,테이프🩹,건전지🔋,전구💡,노트북💻,휴대폰📱,시계⌚,우산☂️,장갑🧤,양말🧦,모자🧢,신발👟,가방🎒,안경👓,마스크😷,밴드🩹,물티슈🧻,기저귀👶";
+    const dbMart = dbMartRaw.split(',').map(item => ({ word: item.slice(0, -2).trim() || item.slice(0, -1), type: 'emoji', emoji: item.slice(-2).match(/[\p{Emoji}]/u) ? item.slice(-2) : item.slice(-1) }));
+
+    const dbAnimalRaw = "강아지🐶,고양이🐱,쥐🐭,햄스터🐹,토끼🐰,여우🦊,곰🐻,판다🐼,코알라🐨,호랑이🐯,사자🦁,소🐮,돼지🐷,개구리🐸,원숭이🐵,닭🐔,펭귄🐧,참새🐦,오리🦆,독수리🦅,부엉이🦉,박쥐🦇,늑대🐺,멧돼지🐗,말🐴,유니콘🦄,꿀벌🐝,애벌레🐛,나비🦋,달팽이🐌,무당벌레🐞,개미🐜,모기🦟,귀뚜라미🦗,거미🕷️,전갈🦂,거북이🐢,뱀🐍,도마뱀🦎,공룡🦖,문어🐙,오징어🦑,새우🦐,바닷가재🦞,꽃게🦀,복어🐡,열대어🐠,물고기🐟,돌고래🐬,고래🐳,상어🦈,표범🐆,얼룩말🦓,고릴라🦍,오랑우탄🦧,매머드🦣,코끼리🐘,하마🦛,코뿔소🦏,낙타🐪,쌍봉낙타🐫,기린🦒,캥거루🦘,수달🦦,스컹크🦨,오소리🦡,다람쥐🐿️,바퀴벌레🪳,거위🪿,해파리🪼,바다표범🦭,악어🐊,칠면조🦃,공작🦚,앵무새🦜,백조🦢,플라밍고🦩,비둘기🕊️,타조🦤,라쿤🦝,라마🦙,알파카🦙,하이에나🐆,사슴🦌,양🐑,염소🐐,고슴도치🦔,오리너구리🦆,물개🦭,바다거북🐢,불가사리⭐,소라게🐚,나방🦋,파리🪰,투구벌레🪲,카멜레온🦎,이구아나🦎,수탉🐓,병아리🐤,까마귀🐦‍⬛,북극곰🐻‍❄️";
+    const dbAnimal = dbAnimalRaw.split(',').map(item => ({ word: item.slice(0, -2).trim() || item.slice(0, -1), type: 'emoji', emoji: item.slice(-2).match(/[\p{Emoji}]/u) ? item.slice(-2) : item.slice(-1) }));
+
+    const dbProverbRaw = "가는 날이 장날이다,가는 말이 고와야 오는 말이 곱다,가랑비에 옷 젖는 줄 모른다,가재는 게 편이다,가지 많은 나무에 바람 잘 날 없다,간에 붙었다 쓸개에 붙었다 한다,갈수록 태산이다,개구리 올챙이 적 생각 못 한다,개천에서 용 난다,고래 싸움에 새우 등 터진다,고양이 목에 방울 달기,공든 탑이 무너지랴,구슬이 서 말이라도 꿰어야 보배다,귀에 걸면 귀걸이 코에 걸면 코걸이,그림의 떡,긁어 부스럼,금강산도 식후경,기는 놈 위에 나는 놈 있다,까마귀 날자 배 떨어진다,꿩 대신 닭,남의 잔치에 감 놔라 배 놔라 한다,낫 놓고 기역 자도 모른다,낮말은 새가 듣고 밤말은 쥐가 듣는다,내 코가 석 자,누워서 침 뱉기,다 된 죽에 코 빠뜨리기,달면 삼키고 쓰면 뱉는다,닭 쫓던 개 지붕 쳐다보듯,도둑이 제 발 저린다,돌다리도 두들겨 보고 건너라,동문서답,되로 주고 말로 받는다,등잔 밑이 어둡다,땅 짚고 헤엄치기,똥 묻은 개가 겨 묻은 개 나무란다,뛰는 놈 위에 나는 놈 있다,마른 하늘에 날벼락,말 한마디에 천 냥 빚도 갚는다,매도 먼저 맞는 게 낫다,모난 돌이 정 맞는다,모르면 약이요 아는 게 병이다,믿는 도끼에 발등 찍힌다,밑 빠진 독에 물 붓기,바늘 도둑이 소 도둑 된다,발 없는 말이 천 리 간다,방귀 뀐 놈이 성낸다,배보다 배꼽이 더 크다,백지장도 맞들면 낫다,벼는 익을수록 고개를 숙인다,병 주고 약 준다,보기 좋은 떡이 먹기도 좋다,사공이 많으면 배가 산으로 간다,서당 개 삼 년이면 풍월을 읊는다,세 살 버릇 여든까지 간다,소 잃고 외양간 고친다,쇠뿔도 단김에 빼라,수박 겉 핥기,시작이 반이다,십 년이면 강산도 변한다,아는 길도 물어가라,아니 땐 굴뚝에 연기 날까,얌전한 고양이 부뚜막에 먼저 올라간다,어물전 망신은 꼴뚜기가 시킨다,열 번 찍어 안 넘어가는 나무 없다,오르지 못할 나무는 쳐다보지도 마라,옥에도 티가 있다,우물 안 개구리,원숭이도 나무에서 떨어진다,윗물이 맑아야 아랫물이 맑다,입에 쓴 약이 병에는 좋다,자라 보고 놀란 가슴 솥뚜껑 보고 놀란다,작은 고추가 맵다,종로에서 뺨 맞고 한강에서 눈 흘긴다,쥐구멍에도 볕 뜰 날 있다,지렁이도 밟으면 꿈틀한다,천 리 길도 한 걸음부터,칼로 물 베기,콩 심은 데 콩 나고 팥 심은 데 팥 난다,티끌 모아 태산,팥으로 메주를 쑨대도 곧이듣는다,핑계 없는 무덤 없다,하늘의 별 따기,하늘이 무너져도 솟아날 구멍이 있다,하룻강아지 범 무서운 줄 모른다,한 귀로 듣고 한 귀로 흘린다,호랑이도 제 말 하면 온다,호랑이에 물려 가도 정신만 차리면 산다,무소식이 희소식이다,떡 줄 사람은 생각도 안 하는데 김칫국부터 마신다,사촌이 땅을 사면 배가 아프다,쥐도 새도 모르게,찬물도 위아래가 있다,참을 인 자 셋이면 살인을 면한다,첫술에 배부르랴,고생 끝에 낙이 온다,꼬리가 길면 밟힌다,빈 수레가 요란하다,소문난 잔치에 먹을 것 없다,우물을 파도 한 우물을 파라,우는 아이 젖 준다";
+    const dbProverb = dbProverbRaw.split(',').map(item => ({ word: item, type: 'text' }));
+
+
+    // -----------------------------------------------------
+    // 2. 게임 로직
+    // -----------------------------------------------------
+    let currentSequence = [];
+    let currentIndex = 0;
+    let currentScreenId = 'title-screen';
+
+    // 화면 전환 함수
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        currentScreenId = screenId;
+    }
+
+    // 배열을 랜덤으로 섞어주는 함수
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    // 게임 시작 함수
+    function startGame(category) {
+        let db = [];
+        if(category === 'pokemon') db = dbPokemon;
+        if(category === 'mart') db = dbMart;
+        if(category === 'animal') db = dbAnimal;
+        if(category === 'proverb') db = dbProverb;
+
+        // 랜덤으로 섞은 뒤 10개 추출
+        currentSequence = shuffle([...db]).slice(0, 10);
+        currentIndex = 0;
+        
+        updateGameView();
+        showScreen('game-screen');
+    }
+
+    // 게임 화면 업데이트
+    function updateGameView() {
+        const itemImage = document.getElementById('item-image');
+        const itemEmoji = document.getElementById('item-emoji');
+        const itemWord = document.getElementById('item-word');
+        const counter = document.getElementById('game-counter');
+
+        counter.innerText = `${currentIndex + 1} / 10`;
+
+        const currentItem = currentSequence[currentIndex];
+        itemWord.innerText = currentItem.word;
+
+        // 표시 타입(이미지, 이모지, 텍스트(속담))에 따른 처리
+        if (currentItem.type === 'image') {
+            itemImage.src = currentItem.src;
+            itemImage.style.display = 'block';
+            itemEmoji.style.display = 'none';
+        } else if (currentItem.type === 'emoji') {
+            itemEmoji.innerText = currentItem.emoji;
+            itemEmoji.style.display = 'block';
+            itemImage.style.display = 'none';
+        } else {
+            itemImage.style.display = 'none';
+            itemEmoji.style.display = 'none';
+        }
+    }
+
+    // 다음 문제로 넘어가기
+    function nextItem() {
+        if (currentScreenId !== 'game-screen') return;
+
+        currentIndex++;
+        if (currentIndex >= 10) {
+            showScreen('end-screen');
+        } else {
+            updateGameView();
+        }
+    }
+
+    // -----------------------------------------------------
+    // 3. 조작(컨트롤) 이벤트 등록
+    // -----------------------------------------------------
+    
+    // 클릭 및 터치 이벤트
+    document.getElementById('game-screen').addEventListener('click', nextItem);
+    
+    // 모바일 터치 민감도를 위해 touchstart 추가
+    document.getElementById('game-screen').addEventListener('touchstart', (e) => {
+        e.preventDefault(); // 더블 클릭 방지
+        nextItem();
+    }, {passive: false});
+
+    // 스페이스바 조작
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            e.preventDefault(); // 스페이스바로 화면 내려가는 것 방지
+            
+            // 타이틀이나 종료 화면일 때 스페이스 누르면 장르 선택화면으로
+            if (currentScreenId === 'title-screen' || currentScreenId === 'end-screen') {
+                showScreen('category-screen');
+            } 
+            // 게임 중이면 다음으로 넘어가기
+            else if (currentScreenId === 'game-screen') {
+                nextItem();
+            }
+        }
+    });
+
+</script>
+</body>
+</html>
